@@ -1,0 +1,165 @@
+### Support Ticket API — colección de ejemplo
+### Pensada para la extensión "REST Client" de VS Code (o el HTTP Client de
+### JetBrains, compatible con esta sintaxis). Requiere haber corrido antes:
+###   python manage.py seed_demo
+### que crea agent_1, agent_2, customer_1, customer_2, customer_3, todos con
+### contraseña "demo12345" (ver README.md → Credenciales de prueba).
+
+@baseUrl = http://localhost:8000/api/v1
+
+### Token — agente
+# @name loginAgent
+POST {{baseUrl}}/auth/token/
+Content-Type: application/json
+
+{
+  "username": "agent_1",
+  "password": "demo12345"
+}
+
+### Token — cliente
+# @name loginCustomer
+POST {{baseUrl}}/auth/token/
+Content-Type: application/json
+
+{
+  "username": "customer_1",
+  "password": "demo12345"
+}
+
+### Refrescar el access token del agente
+POST {{baseUrl}}/auth/token/refresh/
+Content-Type: application/json
+
+{
+  "refresh": "{{loginAgent.response.body.$.refresh}}"
+}
+
+### Quién soy
+GET {{baseUrl}}/users/me/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+
+### Agentes disponibles (para elegir a quién asignar)
+# @name listAgents
+GET {{baseUrl}}/agents/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+
+### Crear una solicitud (como cliente) — CA-01
+# @name createTicket
+POST {{baseUrl}}/tickets/
+Authorization: Bearer {{loginCustomer.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "subject": "No enciende",
+  "description": "El equipo no enciende desde ayer.",
+  "priority": "HIGH"
+}
+
+### Crear sin asunto — CA-02, debe dar 400
+POST {{baseUrl}}/tickets/
+Authorization: Bearer {{loginCustomer.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "description": "Sin asunto",
+  "priority": "HIGH"
+}
+
+### Listar mis solicitudes (cliente ve solo las propias) — CA-03
+GET {{baseUrl}}/tickets/
+Authorization: Bearer {{loginCustomer.response.body.$.access}}
+
+### Listar todas, filtradas por estado (agente ve todo) — CA-04
+GET {{baseUrl}}/tickets/?status=NEW&ordering=-created_at
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+
+### Detalle de la solicitud creada
+GET {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+
+### Asignarla a un agente — CA-05
+POST {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/assign/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "assigned_to": {{listAgents.response.body.$.results[0].id}}
+}
+
+### Pasar a IN_PROGRESS — CA-07
+POST {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/status/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "status": "IN_PROGRESS"
+}
+
+### Transición inválida directa a algo no permitido — CA-08, debe dar 409
+POST {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/status/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "status": "NEW"
+}
+
+### Comentario interno (agente) — CA-10
+POST {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/comments/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "body": "Diagnóstico en curso, se reemplaza la fuente de poder.",
+  "is_internal": true
+}
+
+### El cliente lista comentarios y NO ve el interno — CA-10
+GET {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/comments/
+Authorization: Bearer {{loginCustomer.response.body.$.access}}
+
+### El cliente no puede cambiar el estado — CA-11, debe dar 403
+POST {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/status/
+Authorization: Bearer {{loginCustomer.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "status": "RESOLVED"
+}
+
+### Resolver (agente)
+POST {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/status/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "status": "RESOLVED",
+  "note": "Se reemplazó la fuente de poder."
+}
+
+### Cerrar (cliente autor, desde RESOLVED) — CA-14
+POST {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/status/
+Authorization: Bearer {{loginCustomer.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "status": "CLOSED"
+}
+
+### Historial completo, orden cronológico descendente — CA-12
+GET {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/history/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+
+### Escribir sobre el historial da 405 — CA-12
+POST {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/history/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+
+### Ya cerrada: cualquier cambio da 409 — CA-09
+POST {{baseUrl}}/tickets/{{createTicket.response.body.$.id}}/status/
+Authorization: Bearer {{loginAgent.response.body.$.access}}
+Content-Type: application/json
+
+{
+  "status": "IN_PROGRESS"
+}

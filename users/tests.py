@@ -1,1 +1,3 @@
-# Tests de la app users se agregan en el Hito 4 (docs/tasks.md T-15).
+# `users` no tiene criterios de aceptación propios (docs/spec.md §6): su
+# comportamiento (JWT, /me/, /agents/) queda cubierto indirectamente por
+# tickets/tests/test_api.py, que autentica como cliente y como agente.
