@@ -1,0 +1,27 @@
+# Entorno virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Django
+db.sqlite3
+media/
+staticfiles/
+
+# Entorno
+.env
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+
+# Tests
+.pytest_cache/
+.ruff_cache/
+htmlcov/
+.coverage

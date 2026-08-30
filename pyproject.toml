@@ -1,0 +1,16 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+extend-ignore = [
+    # Los atributos de clase mutables (fields, permission_classes, queryset...)
+    # son el idiom estándar de Django/DRF: no son "defaults mutables" en el
+    # sentido que la regla intenta prevenir.
+    "RUF012",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
