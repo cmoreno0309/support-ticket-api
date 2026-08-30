@@ -17,6 +17,7 @@ api_v1_patterns = [
     path("auth/token/", TokenObtainPairView.as_view(), name="token-obtain-pair"),
     path("auth/token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
     path("", include("users.urls")),
+    path("", include("tickets.urls")),
 ]
 
 urlpatterns = [
