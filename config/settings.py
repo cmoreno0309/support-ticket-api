@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # Propias
     "users",
+    "tickets",
 ]
 
 MIDDLEWARE = [
