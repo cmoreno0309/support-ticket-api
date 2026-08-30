@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: support_desk
+      POSTGRES_USER: support_desk
+      POSTGRES_PASSWORD: support_desk
+    ports:
+      # 5433 en el host para no chocar con un Postgres local en el 5432
+      # (plan.md §7). Dentro de la red de docker compose, "db" escucha en
+      # su puerto interno normal, 5432.
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U support_desk"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    environment:
+      DB_ENGINE: postgresql
+      DB_NAME: support_desk
+      DB_USER: support_desk
+      DB_PASSWORD: support_desk
+      DB_HOST: db
+      DB_PORT: 5432
+      SECRET_KEY: django-insecure-docker-compose-dev-key
+      DEBUG: "True"
+      ALLOWED_HOSTS: localhost,127.0.0.1
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
