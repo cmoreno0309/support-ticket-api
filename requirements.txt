@@ -1,6 +1,6 @@
 # Runtime
 Django==5.2.17
-djangorestframework==3.16.1
+djangorestframework==3.18.2
 djangorestframework-simplejwt==5.5.1
 django-filter==25.2
 drf-spectacular==0.30.0
